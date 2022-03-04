@@ -1,0 +1,94 @@
+##################### Extra Hard Starting Project ######################
+
+# 1. Update the birthdays.csv
+
+# 2. Check if today matches a birthday in the birthdays.csv
+
+# 3. If step 2 is true, pick a random letter from letter templates and replace the [NAME] with the person's actual name from birthdays.csv
+
+# 4. Send the letter generated in step 3 to that person's email address.
+
+# ---------------------------------------------------------------------------------------------------------- #
+
+import pandas
+import smtplib
+import random
+import datetime as dt
+
+# set up email stuff
+# assigning the email/password of the account that will send the emails
+my_email = "testingsmtp30@gmail.com"
+password = "Supersecretpassword12345"
+
+
+
+
+# using the datetime module to find the current date using datetime.now()
+# assigns the current month and current day to their respective variables
+current_date = dt.datetime.now()
+current_month = current_date.month
+current_day = current_date.day
+
+current_month_day_combo = f"{current_month}-{current_day}"
+
+# a list of the 3 files that will randomly be chosen from
+letter_option_list = ['letter_1.txt', 'letter_2.txt', 'letter_3.txt']
+
+
+# opens the birthdays file, containing people's names-email-birth year-birth month-birthday
+with open('./birthdays.csv', 'r') as birthday_file:
+    # reads the file (automatically turns into a dataframe
+    birthdays_df = pandas.read_csv(birthday_file)
+    # looks for rows where the month is equal to the current month, and parses down
+    sub_birthday_df = birthdays_df[birthdays_df['month'] == current_month]
+    # takes the df containing rows where the month == current_month and looks for rows where the day
+    # is equal to the current_day, and parses down again. Leaving only rows of people w/ birthdays
+    todays_birthdays_df = sub_birthday_df[sub_birthday_df['day'] == current_day]
+
+# checks to see if there are any rows in the df (i.e. someone has a birthday today)
+if len(todays_birthdays_df) != 0:
+    todays_birthday_dict = todays_birthdays_df.to_dict()
+    # uses the names of todays birthdays and creates a list
+    todays_birthday_names = todays_birthdays_df["person_name"].to_list()
+
+
+# for loop that iterates through the list of names of today's birthday people
+    for birthday_person in todays_birthday_names:
+        # for each person, chooses a random letter
+        letter_choice = random.choice(letter_option_list)
+        # opens the randomly chosen letter
+        with open(f"./letter_templates/{letter_choice}", mode='r') as letter:
+            # reads the content
+            read_letter = letter.read()
+            # replace [NAME] with this iteration's (birthday person) name, and assign it to a variable
+            name_inserted_letter = read_letter.replace("[NAME]", birthday_person)
+
+        # using iterrows, iterates through the today's birthdays dataframe, looking to see where
+        # the person_name value matches this iteration (birthday person name)
+        for index, row in todays_birthdays_df.iterrows():
+            if row.person_name == birthday_person:
+                # if the iteration matches the name, it assigns that row's email to a variable
+                target_email = row.email
+
+
+
+                # in that same iteration of the for loop, fires up the email, logs in, and sends an email to the target
+                # email (this iteration), with the randomly selected and modified letter text. Then it will all repeat
+                # for the next iteration of the for loop
+                with smtplib.SMTP("smtp.gmail.com", port=587) as connection:
+                    connection.starttls()
+                    connection.login(user=my_email, password=password)
+                    connection.sendmail(from_addr=my_email,
+                                        to_addrs=target_email,
+                                        msg=f"Subject: Happy Birthday!\n\n {name_inserted_letter}"
+                                        )
+
+
+# General thoughts: If I were to do this again, I would not create the sub-dataframes. Instead, I would create a
+# singular dataframe out of the birthdays.csv file. Then, I would use a for loop and iterrows() to iterate through the
+# df looking to see if row.month == current_month and row.day == current_day. If both of those criteria are met, then I
+# would assign the row.person_name to something like target_name and row.email to target_email. I would then go through
+# the process of randomly choosing a letter, and replacing [NAME] with target_name, then taking that letter and emailing
+# it to the target_email. The process of finding the rows that match today's date (if any), assigning the variables,
+# randomly choosing the letter, modifying it, and email it off to that person would all be done in one iteration of
+# the for loop. 
