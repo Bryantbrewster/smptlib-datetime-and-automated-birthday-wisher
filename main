@@ -1,0 +1,51 @@
+import smtplib
+import datetime as dt
+import random
+
+
+# from the datetime module (renamed as "dt"), create the class datetime, and invoke the now function. Assign it
+# to the now object (again, created from the datetime Class)
+now = dt.datetime.now()
+year = now.year
+month = now.month
+current_weekday = now.weekday()
+# weekday() returns the day of the week as an integer where Monday is indexed as 0 & Sunday = 6
+# Thursday = 3
+
+# date_of_birth = dt.datetime(year=1996,month=5,day=25)
+
+# opens and reads the txt file, and then grabs a random quote
+with open('./quotes.txt', mode='r') as quotes_file:
+    quotes = quotes_file.readlines()
+    random_quote = random.choice(quotes)
+
+# checks to see if today is Thursday. If so, it grabs a random quote from the quotes.txt file and emails it
+if current_weekday == 3:
+    print('sent')
+    # test account info
+    # gmail name: testingsmtp30@gmail.com, yahoo name: receivingsmpt30@yahoo.com
+    # gmail AND yahoo password: Supersecretpassword12345
+
+    # assigning the email/password of the account that will send the emails
+    my_email = "testingsmtp30@gmail.com"
+    password = "Supersecretpassword12345"
+    # creating a connection object, a way for us to connect to our email provider's SMTP server
+    # need to specify the corresponding email provider. By using "with" it acts similar to using "with" to open files
+    # and will close them on its own when its done
+    with smtplib.SMTP("smtp.gmail.com", port=587) as connection:
+        # this line enables transport layer security, which will encrypt the emails during transport,
+        # so if they are intercepted they will be decrypted and can't be read
+        connection.starttls()
+        # logs in to the email
+        connection.login(user=my_email, password=password)
+        # send the message, specifies the from/to + what goes in the subject/body of the mesage. After \n\n = message body
+        connection.sendmail(
+            from_addr=my_email,
+            to_addrs="receivingsmpt30@yahoo.com",
+            msg=f"Subject: Hello\n\n {random_quote}"
+        )
+
+
+
+
+
